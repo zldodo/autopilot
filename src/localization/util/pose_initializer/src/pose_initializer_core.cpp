@@ -97,6 +97,7 @@ void PoseInitializer::serviceInitializePose(
   const std::shared_ptr<tier4_localization_msgs::srv::PoseWithCovarianceStamped::Request> req,
   std::shared_ptr<tier4_localization_msgs::srv::PoseWithCovarianceStamped::Response> res)
 {
+  RCLCPP_INFO(get_logger(), "PoseInitializer::serviceInitializePose");
   enable_gnss_callback_ = false;  // get only first topic
 
   auto add_height_pose_msg_ptr = std::make_shared<geometry_msgs::msg::PoseWithCovarianceStamped>();
@@ -116,6 +117,7 @@ void PoseInitializer::serviceInitializePose(
 void PoseInitializer::callbackInitialPose(
   geometry_msgs::msg::PoseWithCovarianceStamped::ConstSharedPtr pose_cov_msg_ptr)
 {
+  RCLCPP_INFO(get_logger(), "PoseInitializer::callbackInitialPose");
   enable_gnss_callback_ = false;  // get only first topic
 
   auto add_height_pose_msg_ptr = std::make_shared<geometry_msgs::msg::PoseWithCovarianceStamped>();
@@ -136,6 +138,7 @@ void PoseInitializer::callbackInitialPose(
 void PoseInitializer::callbackGNSSPoseCov(
   geometry_msgs::msg::PoseWithCovarianceStamped::ConstSharedPtr pose_cov_msg_ptr)
 {
+  RCLCPP_INFO(get_logger(), "PoseInitializer::callbackGNSSPoseCov");
   if (!enable_gnss_callback_) {
     return;
   }
