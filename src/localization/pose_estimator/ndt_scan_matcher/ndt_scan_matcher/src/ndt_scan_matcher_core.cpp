@@ -66,9 +66,6 @@ double norm(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Poin
     std::pow(p1.x - p2.x, 2.0) + std::pow(p1.y - p2.y, 2.0) + std::pow(p1.z - p2.z, 2.0));
 }
 
-// bool isLocalOptimalSolutionOscillation(
-//   const std::vector<Eigen::Matrix4f> & result_pose_matrix_array, const float oscillation_threshold,
-//   const float inversion_vector_threshold)
 bool isLocalOptimalSolutionOscillation(
   const std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> & result_pose_matrix_array, const float oscillation_threshold,
   const float inversion_vector_threshold)
@@ -101,6 +98,8 @@ NDTScanMatcher::NDTScanMatcher()
   tf2_listener_(tf2_buffer_),
   tf2_broadcaster_(*this),
   ndt_implement_type_(NDTImplementType::PCL_GENERIC),
+  ndt_ptr_(nullptr),
+  base_to_sensor_matrix_(),
   base_frame_("base_link"),
   ndt_base_frame_("ndt_base_link"),
   map_frame_("map"),
@@ -116,16 +115,15 @@ NDTScanMatcher::NDTScanMatcher()
   RCLCPP_INFO(get_logger(), "NDT Implement Type is %d", ndt_implement_type_tmp);
   try {
     ndt_ptr_ = getNDT<PointSource, PointTarget>(ndt_implement_type_);
+    // ndt_ptr_ = pcl::make_shared<NormalDistributionsTransformOMP<PointSource, PointTarget>>();
   } catch (std::exception & e) {
     RCLCPP_ERROR(get_logger(), "%s", e.what());
     return;
   }
 
   if (ndt_implement_type_ == NDTImplementType::OMP) {
-    using T = NormalDistributionsTransformOMP<PointSource, PointTarget>;
-
-    // FIXME(IshitaTakeshi) Not sure if this is safe
-    std::shared_ptr<T> ndt_omp_ptr = std::dynamic_pointer_cast<T>(ndt_ptr_);
+      // FIXME(IshitaTakeshi) Not sure if this is safe
+    std::shared_ptr<NDTOMP> ndt_omp_ptr = std::dynamic_pointer_cast<NDTOMP>(ndt_ptr_);
     int search_method = static_cast<int>(omp_params_.search_method);
     search_method = this->declare_parameter("omp_neighborhood_search_method", search_method);
     omp_params_.search_method = static_cast<pclomp::NeighborSearchMethod>(search_method);
@@ -135,7 +133,7 @@ NDTScanMatcher::NDTScanMatcher()
     omp_params_.num_threads = this->declare_parameter("omp_num_threads", omp_params_.num_threads);
     omp_params_.num_threads = std::max(omp_params_.num_threads, 1);
     ndt_omp_ptr->setNumThreads(omp_params_.num_threads);
-    ndt_ptr_ = ndt_omp_ptr;
+    ndt_ptr_ = std::dynamic_pointer_cast<NDTBase>(ndt_omp_ptr);
   }
 
   int points_queue_size = this->declare_parameter("input_sensor_points_queue_size", 0);
@@ -357,17 +355,15 @@ void NDTScanMatcher::callbackMapPoints(
   const auto resolution = ndt_ptr_->getResolution();
   const auto max_iterations = ndt_ptr_->getMaximumIterations();
 
-  using NDTBase = NormalDistributionsTransformBase<PointSource, PointTarget>;
-  std::shared_ptr<NDTBase> new_ndt_ptr_ = getNDT<PointSource, PointTarget>(ndt_implement_type_);
-
+  // boost::shared_ptr<NDTBase> new_ndt_ptr_ = getNDT<PointSource, PointTarget>(ndt_implement_type_);
+  std::shared_ptr<NDTBase> new_ndt_ptr_;
   if (ndt_implement_type_ == NDTImplementType::OMP) {
-    using T = NormalDistributionsTransformOMP<PointSource, PointTarget>;
-
     // FIXME(IshitaTakeshi) Not sure if this is safe
-    std::shared_ptr<T> ndt_omp_ptr = std::dynamic_pointer_cast<T>(ndt_ptr_);
+    std::shared_ptr<NDTOMP> ndt_omp_ptr = std::dynamic_pointer_cast<NDTOMP>(ndt_ptr_);
     ndt_omp_ptr->setNeighborhoodSearchMethod(omp_params_.search_method);
     ndt_omp_ptr->setNumThreads(omp_params_.num_threads);
-    new_ndt_ptr_ = ndt_omp_ptr;
+    // new_ndt_ptr_ = ndt_omp_ptr;
+    new_ndt_ptr_ = std::dynamic_pointer_cast<NDTBase>(ndt_omp_ptr);
   }
 
   new_ndt_ptr_->setTransformationEpsilon(trans_epsilon);
@@ -600,7 +596,7 @@ void NDTScanMatcher::callbackSensorPoints(
 }
 
 geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::alignUsingMonteCarlo(
-  const std::shared_ptr<NormalDistributionsTransformBase<PointSource, PointTarget>> & ndt_ptr,
+  const std::shared_ptr<NDTBase> & ndt_ptr,
   const geometry_msgs::msg::PoseWithCovarianceStamped & initial_pose_with_cov)
 {
   if (ndt_ptr->getInputTarget() == nullptr || ndt_ptr->getInputSource() == nullptr) {

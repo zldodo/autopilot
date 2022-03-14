@@ -137,10 +137,7 @@ Eigen::Matrix4f NormalDistributionsTransformOMP<PointSource, PointTarget>::getFi
   return ndt_ptr_->getFinalTransformation();
 }
 
-// EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix4f)
 template <class PointSource, class PointTarget>
-// std::vector<Eigen::Matrix4f>
-// std::vector<Eigen::Vector4d>
 std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> 
 NormalDistributionsTransformOMP<PointSource, PointTarget>::getFinalTransformationArray() const
 {
@@ -151,8 +148,7 @@ template <class PointSource, class PointTarget>
 Eigen::Matrix<double, 6, 6> NormalDistributionsTransformOMP<PointSource, PointTarget>::getHessian()
   const
 {
-  // return ndt_ptr_->getHessian();
-  return Eigen::Matrix<double, 6, 6>();
+  return ndt_ptr_->getHessian();
 }
 
 template <class PointSource, class PointTarget>

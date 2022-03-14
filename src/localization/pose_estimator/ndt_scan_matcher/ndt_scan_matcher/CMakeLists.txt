@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(ndt_scan_matcher)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-endif()
+add_definitions(-std=c++14)
+set(CMAKE_CXX_FLAGS "-std=c++14")
+# add_compile_options(-march=native)
+add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()

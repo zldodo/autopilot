@@ -8,54 +8,49 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
+  # add_compile_options(-march=native -Wall -Wextra -Wpedantic )
 endif()
 
-find_package(ament_cmake REQUIRED)
+# pcl 1.7 causes a segfault when it is built with debug mode
+# set(CMAKE_BUILD_TYPE "RELEASE")
+
+# find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 find_package(PCL REQUIRED COMPONENTS common io registration)
 find_package(ndt_omp REQUIRED)
 find_package(ndt_pcl_modified REQUIRED)
-find_package(Eigen3 REQUIRED)
 
-add_library(ndt
+###########
+## Build ##
+###########
+include_directories(${ndt_omp_INCLUDE_DIRS})
+link_directories(${ndt_omp_LIBRARY_DIRS})
+ament_auto_add_library(ndt SHARED
   src/base.cpp
   src/pcl_generic.cpp
   src/pcl_modified.cpp
   src/omp.cpp
 )
-
-target_include_directories(ndt
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_link_libraries(ndt 
+  ${PCL_LIBRARIES} 
+  ${ndt_omp_LIBRARIES}
+  ${ndt_pcl_modified_LIBRARIES}
 )
 
-ament_target_dependencies(ndt PUBLIC ndt_omp ndt_pcl_modified Eigen3)
-# Can't use ament_target_dependencies() here because it doesn't link PCL
-# properly, see ndt_omp for more information.
-target_compile_definitions(ndt PUBLIC ${PCL_DEFINITIONS})
-target_include_directories(ndt PUBLIC ${PCL_INCLUDE_DIRS})
-target_link_libraries(ndt PUBLIC ${PCL_LIBRARIES})
-target_link_directories(ndt PUBLIC ${PCL_LIBRARY_DIRS})
-
-ament_export_targets(export_ndt HAS_LIBRARY_TARGET)
-ament_export_dependencies(ndt_omp ndt_pcl_modified PCL)
-
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
-
-install(
-  TARGETS ndt
-  EXPORT export_ndt
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+#gtest
+set(NDT_TEST ndt_gtest)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+  
+  ament_add_gtest(${NDT_TEST}
+  test/ndt_test.cpp)
+  target_link_libraries(${NDT_TEST} ndt)
+  target_compile_definitions(${NDT_TEST} PRIVATE -Wno-conversion -Wno-float-conversion -Wno-double-promotion)
+
 endif()
 
-ament_package()
+# ament_package()
+ament_auto_package()
