@@ -1,0 +1,18 @@
+[submodule "src/aip_launcher"]
+	path = src/aip_launcher
+	url = git@github.com:zldodo/aip_launcher.git
+[submodule "src/autoware_auto_msgs"]
+	path = src/autoware_auto_msgs
+	url = git@github.com:zldodo/AutowareArchitectureProposal_api_msgs.git
+[submodule "src/autoware_launch"]
+	path = src/autoware_launch
+	url = git@github.com:zldodo/autoware_launch.git
+[submodule "src/description/lexus_description.iv"]
+	path = src/description/lexus_description.iv
+	url = git@github.com:zldodo/lexus_description.iv.git
+[submodule "src/description/aip_description.iv"]
+	path = src/description/aip_description.iv
+	url = git@github.com:zldodo/aip_description.iv.git
+[submodule "src/description/sensor_component_description"]
+	path = src/description/sensor_component_description
+	url = git@github.com:zldodo/sensor_component_description.git
