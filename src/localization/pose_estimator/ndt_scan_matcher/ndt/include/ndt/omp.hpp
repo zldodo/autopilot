@@ -53,14 +53,9 @@ public:
   boost::shared_ptr<const pcl::PointCloud<PointTarget>> getInputTarget() const override;
   boost::shared_ptr<const pcl::PointCloud<PointSource>> getInputSource() const override;
   Eigen::Matrix4f getFinalTransformation() const override;
-  // EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix4f)
-  // std::vector<Eigen::Matrix4f> getFinalTransformationArray() const override;
-  // std::vector<Eigen::Vector4d > getFinalTransformationArray() const override;
-  // std::vector<Eigen::Matrix<float,4,4>, Eigen::aligned_allocator<Eigen::Matrix<float,4,4>>>
   std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> 
    getFinalTransformationArray() const override;
   Eigen::Matrix<double, 6, 6> getHessian() const override;
-
   boost::shared_ptr<pcl::search::KdTree<PointTarget>> getSearchMethodTarget() const override;
 
   // only OMP Impl
@@ -71,7 +66,7 @@ public:
   pclomp::NeighborSearchMethod getNeighborhoodSearchMethod() const;
 
 private:
-  boost::shared_ptr<pclomp::NormalDistributionsTransform<PointSource, PointTarget>> ndt_ptr_;
+  std::shared_ptr<pclomp::NormalDistributionsTransform<PointSource, PointTarget>> ndt_ptr_;
 };
 
 #include "ndt/impl/omp.hpp"
