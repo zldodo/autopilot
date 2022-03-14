@@ -51,6 +51,7 @@
 #include <thread>
 #include <vector>
 
+
 enum class NDTImplementType { PCL_GENERIC = 0, PCL_MODIFIED = 1, OMP = 2 };
 
 template <typename PointSource, typename PointTarget>
@@ -58,6 +59,7 @@ std::shared_ptr<NormalDistributionsTransformBase<PointSource, PointTarget>> getN
   const NDTImplementType & ndt_mode)
 {
   std::shared_ptr<NormalDistributionsTransformBase<PointSource, PointTarget>> ndt_ptr;
+
   if (ndt_mode == NDTImplementType::PCL_GENERIC) {
     ndt_ptr.reset(new NormalDistributionsTransformPCLGeneric<PointSource, PointTarget>);
     return ndt_ptr;
@@ -80,6 +82,10 @@ class NDTScanMatcher : public rclcpp::Node
   using PointSource = pcl::PointXYZ;
   using PointTarget = pcl::PointXYZ;
 
+  typedef NormalDistributionsTransformBase<PointSource, PointTarget> NDTBase;
+  typedef NormalDistributionsTransformPCLGeneric<PointSource, PointTarget> NDTPCLGeneric;
+  typedef NormalDistributionsTransformPCLModified<PointSource, PointTarget> NDTPCLModified;
+  typedef NormalDistributionsTransformOMP<PointSource, PointTarget> NDTOMP;
   // TODO(Tier IV): move file
   struct OMPParams
   {
@@ -102,7 +108,7 @@ private:
     geometry_msgs::msg::PoseWithCovarianceStamped::ConstSharedPtr pose_conv_msg_ptr);
 
   geometry_msgs::msg::PoseWithCovarianceStamped alignUsingMonteCarlo(
-    const std::shared_ptr<NormalDistributionsTransformBase<PointSource, PointTarget>> & ndt_ptr,
+    const std::shared_ptr<NDTBase> & ndt_ptr,
     const geometry_msgs::msg::PoseWithCovarianceStamped & initial_pose_with_cov);
 
   void updateTransforms();
@@ -146,8 +152,8 @@ private:
   tf2_ros::TransformBroadcaster tf2_broadcaster_;
 
   NDTImplementType ndt_implement_type_;
-  std::shared_ptr<NormalDistributionsTransformBase<PointSource, PointTarget>> ndt_ptr_;
-
+  std::shared_ptr<NDTBase> ndt_ptr_;
+ 
   Eigen::Matrix4f base_to_sensor_matrix_;
   std::string base_frame_;
   std::string ndt_base_frame_;
